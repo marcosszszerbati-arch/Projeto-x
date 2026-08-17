@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+const <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -893,4 +893,282 @@ behavior:"smooth"
 </script>
 
 </body>
-  </html>
+      </html>
+MODEL = "gemini-2.5-flash-image";
+
+export default {
+  async fetch(request, env) {
+
+    const url = new URL(request.url);
+
+    // CORS
+    if(request.method === "OPTIONS"){
+      return new Response(null, {
+        headers: corsHeaders()
+      });
+    }
+
+    // =====================================================
+    // GERAÇÃO DE IMAGEM
+    // =====================================================
+
+    if(
+      url.pathname === "/api/generate-image" &&
+      request.method === "POST"
+    ){
+
+      try{
+
+        if(!env.GEMINI_API_KEY){
+
+          return json({
+            error:
+              "GEMINI_API_KEY não configurada no Worker."
+          },500);
+
+        }
+
+        const body = await request.json();
+
+        const prompt =
+          typeof body.prompt === "string"
+            ? body.prompt.trim()
+            : "";
+
+        if(!prompt){
+
+          return json({
+            error:"Prompt de imagem vazio."
+          },400);
+
+        }
+
+        if(prompt.length > 10000){
+
+          return json({
+            error:"Prompt muito grande."
+          },400);
+
+        }
+
+        /*
+         * Gemini Generate Content
+         *
+         * O modelo Nano Banana retorna partes de conteúdo.
+         * Procuramos a parte inlineData contendo a imagem.
+         */
+
+        const endpoint =
+          `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+
+        const payload = {
+          contents:[
+            {
+              role:"user",
+              parts:[
+                {
+                  text:
+                    `Gere uma imagem de alta qualidade baseada exatamente nesta solicitação:
+
+${prompt}
+
+Priorize composição cinematográfica, iluminação coerente, detalhes visuais e fidelidade ao pedido.`
+                }
+              ]
+            }
+          ],
+          generationConfig:{
+            responseModalities:["TEXT","IMAGE"]
+          }
+        };
+
+        const response = await fetch(
+          endpoint,
+          {
+            method:"POST",
+            headers:{
+              "Content-Type":"application/json"
+            },
+            body:JSON.stringify(payload)
+          }
+        );
+
+        const data =
+          await response.json().catch(() => null);
+
+        if(!response.ok){
+
+          console.error(
+            "Gemini error:",
+            JSON.stringify(data)
+          );
+
+          return json({
+            error:
+              data?.error?.message ||
+              `Gemini retornou HTTP ${response.status}`
+          },502);
+
+        }
+
+        let imageData = null;
+        let mimeType = "image/png";
+        let generatedText = "";
+
+        const candidates =
+          data?.candidates || [];
+
+        for(const candidate of candidates){
+
+          const parts =
+            candidate?.content?.parts || [];
+
+          for(const part of parts){
+
+            if(part.text){
+
+              generatedText +=
+                part.text + "\n";
+
+            }
+
+            /*
+             * Estrutura comum da API:
+             *
+             * inlineData: {
+             *   mimeType: "image/png",
+             *   data: "BASE64..."
+             * }
+             */
+
+            if(part.inlineData?.data){
+
+              imageData =
+                part.inlineData.data;
+
+              mimeType =
+                part.inlineData.mimeType ||
+                "image/png";
+
+            }
+
+            /*
+             * Compatibilidade com possíveis
+             * variações de resposta.
+             */
+
+            if(part.inline_data?.data){
+
+              imageData =
+                part.inline_data.data;
+
+              mimeType =
+                part.inline_data.mime_type ||
+                "image/png";
+
+            }
+
+          }
+
+        }
+
+        if(!imageData){
+
+          return json({
+            error:
+              "O Gemini respondeu, mas não retornou dados de imagem.",
+            model:MODEL,
+            details:generatedText.trim()
+          },502);
+
+        }
+
+        const image =
+          `data:${mimeType};base64,${imageData}`;
+
+        return json({
+          success:true,
+          model:MODEL,
+          image,
+          text:generatedText.trim()
+        });
+
+      }catch(error){
+
+        console.error(error);
+
+        return json({
+          error:
+            error?.message ||
+            "Erro interno na geração."
+        },500);
+
+      }
+    }
+
+    // =====================================================
+    // TESTE DO WORKER
+    // =====================================================
+
+    if(
+      url.pathname === "/api/health" &&
+      request.method === "GET"
+    ){
+
+      return json({
+        status:"online",
+        service:"Projeto X AI Integration Hub",
+        imageModel:MODEL,
+        imageGeneration:true
+      });
+
+    }
+
+    // =====================================================
+    // RESPOSTA PADRÃO
+    // =====================================================
+
+    return json({
+      name:"Projeto X — Cinematic Reality Engine",
+      status:"online",
+      endpoints:[
+        "GET /api/health",
+        "POST /api/generate-image"
+      ]
+    });
+
+  }
+};
+
+
+// =========================================================
+// HELPERS
+// =========================================================
+
+function corsHeaders(){
+
+  return {
+    "Access-Control-Allow-Origin":"*",
+    "Access-Control-Allow-Methods":
+      "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers":
+      "Content-Type"
+  };
+
+}
+
+function json(data,status=200){
+
+  return new Response(
+    JSON.stringify(data),
+    {
+      status,
+      headers:{
+        "Content-Type":
+          "application/json; charset=UTF-8",
+        ...corsHeaders()
+      }
+    }
+  );
+
+}

@@ -1,14 +1,191 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projeto X</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projeto X — CRE</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#0b0f14;
+  color:#fff;
+}
+
+header{
+  padding:22px 18px;
+  background:#111821;
+  border-bottom:1px solid #29313d;
+}
+
+header h1{
+  margin:0;
+  font-size:28px;
+}
+
+header p{
+  margin:7px 0 0;
+  color:#9ca8b8;
+}
+
+main{
+  padding:18px;
+  max-width:900px;
+  margin:auto;
+}
+
+.card{
+  background:#121923;
+  border:1px solid #293342;
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:16px;
+}
+
+.card h2{
+  margin-top:0;
+}
+
+textarea{
+  width:100%;
+  min-height:130px;
+  padding:15px;
+  border-radius:12px;
+  border:1px solid #394454;
+  background:#080c11;
+  color:white;
+  font-size:16px;
+  resize:vertical;
+}
+
+button{
+  margin-top:12px;
+  padding:13px 18px;
+  border:0;
+  border-radius:10px;
+  background:#2ea043;
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+}
+
+.modules{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+
+.module{
+  padding:14px;
+  background:#0d131b;
+  border:1px solid #293342;
+  border-radius:12px;
+}
+
+#resultado{
+  white-space:pre-wrap;
+  line-height:1.6;
+  color:#dce3ec;
+}
+
+@media(max-width:600px){
+  .modules{
+    grid-template-columns:1fr;
+  }
+}
+</style>
 </head>
+
 <body>
 
-  <h1>Projeto X</h1>
-  <p>Bem-vindo ao nosso site!</p>
+<header>
+  <h1>🎬 Projeto X</h1>
+  <p>Cinematic Reality Engine — CRE</p>
+</header>
+
+<main>
+
+<div class="card">
+  <h2>Central de Criação</h2>
+
+  <textarea id="ideia"
+  placeholder="Descreva sua ideia para o Projeto X..."></textarea>
+
+  <button onclick="processar()">Processar ideia</button>
+</div>
+
+<div class="card">
+  <h2>Módulos do CRE</h2>
+
+  <div class="modules">
+    <div class="module">🧠 Núcleo Central</div>
+    <div class="module">⚙️ Orquestrador</div>
+    <div class="module">🎬 CRE Cinematográfico</div>
+    <div class="module">💻 Engenharia / Codex</div>
+    <div class="module">🧠 Memória</div>
+    <div class="module">🔎 Controle de Qualidade</div>
+    <div class="module">📁 Gerenciador de Projetos</div>
+    <div class="module">🤖 AI Integration Hub</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Resultado</h2>
+  <div id="resultado">
+    O Projeto X está aguardando uma ideia.
+  </div>
+</div>
+
+</main>
+
+<script>
+
+function processar(){
+
+  const ideia = document.getElementById("ideia").value.trim();
+  const resultado = document.getElementById("resultado");
+
+  if(!ideia){
+    resultado.textContent =
+      "Digite uma ideia para o Projeto X processar.";
+    return;
+  }
+
+  resultado.textContent =
+`PROJETO X — ANÁLISE INICIAL
+
+Ideia recebida:
+${ideia}
+
+NÚCLEO CENTRAL
+Solicitação recebida.
+
+ORQUESTRADOR
+Fluxo identificado.
+
+CRE
+A ideia será transformada em uma produção cinematográfica estruturada.
+
+ETAPAS PLANEJADAS
+1. Interpretar ideia
+2. Criar conceito
+3. Desenvolver personagens
+4. Desenvolver cenários
+5. Planejar cenas
+6. Definir cinematografia
+7. Criar prompts
+8. Executar controle de qualidade
+9. Registrar continuidade
+
+Status:
+PLANEJAMENTO`;
+
+}
+
+</script>
 
 </body>
-</html>
+  </html>
